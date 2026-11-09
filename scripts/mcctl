@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+# mcctl: day-to-day operations for the Minecraft server.
+set -euo pipefail
+
+cd "$(dirname "$(readlink -f "$0")")/.."
+DC=(docker compose)
+
+usage() {
+  cat <<USAGE
+Usage: mcctl <command>
+
+  setup            create .env and an RCON password (first run)
+  up | down        start / stop the server (stop saves the world first)
+  restart          warn players, save, restart
+  status           container health, players online, memory
+  logs             follow the server log
+  console          interactive RCON console
+  cmd <command>    run one server command, e.g.  mcctl cmd "time set day"
+  say <text>       broadcast a message
+  players          list online players
+  save             force a full world save
+  update           pull the newest image and recreate (warns players first)
+USAGE
+}
+
+rcon() { "${DC[@]}" exec -T mc rcon-cli "$@"; }
+
+running() { [[ "$("${DC[@]}" ps --status running -q mc 2>/dev/null)" != "" ]]; }
+
+countdown() {
+  local reason="$1" s
+  running || return 0
+  for s in 60 30 10 5; do
+    rcon "say §e[server] ${reason} in ${s}s" >/dev/null
+    sleep $(( s == 60 ? 30 : s == 30 ? 20 : s == 10 ? 5 : 5 ))
+  done
+}
+
+setup() {
+  [[ -f .env ]] || { cp .env.example .env; echo "created .env"; }
+  if [[ ! -s secrets/rcon_password ]]; then
+    umask 077
+    head -c 24 /dev/urandom | base64 | tr -d '/+=' > secrets/rcon_password
+    echo "generated secrets/rcon_password"
+  fi
+  mkdir -p data
+  echo "next: put your mods into ./mods, set MC_WHITELIST in .env, then: mcctl up"
+}
+
+stop() {
+  if running; then
+    rcon "save-all flush" >/dev/null || true
+  fi
+  "${DC[@]}" down
+}
+
+case "${1:-}" in
+  setup)   setup ;;
+  up)      "${DC[@]}" up -d && echo "starting, follow with: mcctl logs" ;;
+  down)    stop ;;
+  restart) countdown "Restart"; rcon "save-all flush" >/dev/null; "${DC[@]}" restart mc ;;
+  status)
+    "${DC[@]}" ps
+    if running; then
+      echo; rcon list
+      docker stats --no-stream --format 'memory: {{.MemUsage}}  cpu: {{.CPUPerc}}' mc
+    fi ;;
+  logs)    "${DC[@]}" logs -f --tail 100 mc ;;
+  console) "${DC[@]}" exec mc rcon-cli ;;
+  cmd)     shift; rcon "$*" ;;
+  say)     shift; rcon "say $*" ;;
+  players) rcon list ;;
+  save)    rcon "save-all flush" ;;
+  update)
+    "${DC[@]}" pull
+    countdown "Update"
+    rcon "save-all flush" >/dev/null || true
+    "${DC[@]}" up -d ;;
+  -h|--help|help|"") usage ;;
+  *) usage; exit 2 ;;
+esac

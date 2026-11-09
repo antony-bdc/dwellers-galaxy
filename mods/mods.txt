@@ -1,0 +1,2 @@
+# One mod per line: name | version | source URL
+# example-mod | 1.2.3 | https://www.curseforge.com/minecraft/mc-mods/example-mod
