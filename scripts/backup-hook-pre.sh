@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# backup-toolkit pre-hook: flush the world to disk and pause autosave,
+# safekeep pre-hook: flush the world to disk and pause autosave,
 # so restic copies a consistent world instead of half-written region files.
-# Install: ln -s "$PWD/scripts/backup-hook-pre.sh" /etc/backup-toolkit/hooks/pre.d/50-minecraft
+# Install: ln -s "$PWD/scripts/backup-hook-pre.sh" /etc/safekeep/hooks/pre.d/50-minecraft
 set -euo pipefail
 cd "$(dirname "$(readlink -f "$0")")/.."
 

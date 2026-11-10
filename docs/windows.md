@@ -3,7 +3,7 @@
 The stack runs unchanged on a Windows gaming PC with Docker Desktop.
 
 1. Install **Docker Desktop** with the WSL 2 backend.
-2. Clone the repo **inside WSL** (e.g. `~/minecraft-server-ops`), not under `C:\`:
+2. Clone the repo **inside WSL** (e.g. `~/dwellers-galaxy`), not under `C:\`:
    bind mounts from the Windows filesystem are much slower for world data.
 3. In WSL: `./scripts/mcctl setup` and `./scripts/mcctl up`.
 4. Allow the port once in an elevated PowerShell:

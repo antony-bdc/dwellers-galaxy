@@ -1,4 +1,4 @@
-# minecraft-server-ops
+# dwellers-galaxy
 
 A modded Minecraft server (Forge 1.20.1) run like production infrastructure:
 everything in Docker Compose, consistent backups, metrics and alerts, and one CLI for daily operations.
@@ -11,7 +11,7 @@ flowchart LR
     MC --> D[(./data<br/>world)]
     MON[mc-monitor] -->|status ping| MC
     PROM[Prometheus] -->|:9225/metrics| MON
-    BT[backup-toolkit] -->|pre-hook: save-off + flush| MC
+    BT[safekeep] -->|pre-hook: save-off + flush| MC
     BT -->|restic| BK[(encrypted backup)]
     D --> BT
 ```
@@ -41,12 +41,12 @@ $EDITOR .env                 # whitelist, memory, MOTD
 
 ## Backups
 
-World backups use [backup-toolkit](https://github.com/businessantonybdc-crypto/backup-toolkit). Two hooks make them consistent:
+World backups use [safekeep](https://github.com/antony-bdc/safekeep). Two hooks make them consistent:
 
 ```bash
-sudo ln -s "$PWD/scripts/backup-hook-pre.sh"  /etc/backup-toolkit/hooks/pre.d/50-minecraft
-sudo ln -s "$PWD/scripts/backup-hook-post.sh" /etc/backup-toolkit/hooks/post.d/50-minecraft
-# and add "$PWD/data" to BACKUP_PATHS in /etc/backup-toolkit/backup.env
+sudo ln -s "$PWD/scripts/backup-hook-pre.sh"  /etc/safekeep/hooks/pre.d/50-minecraft
+sudo ln -s "$PWD/scripts/backup-hook-post.sh" /etc/safekeep/hooks/post.d/50-minecraft
+# and add "$PWD/data" to BACKUP_PATHS in /etc/safekeep/backup.env
 ```
 
 Before the snapshot the pre-hook runs `save-off` + `save-all flush`, so no region file is half-written;
@@ -55,7 +55,7 @@ the post-hook turns autosave back on, also when the backup failed.
 ## Monitoring
 
 `mc-monitor` exposes `minecraft_status_healthy`, `minecraft_status_players_online_count` and
-`minecraft_status_response_time_seconds` on port 9225. [homelab-monitoring](https://github.com/businessantonybdc-crypto/homelab-monitoring)
+`minecraft_status_response_time_seconds` on port 9225. [observatory](https://github.com/antony-bdc/observatory)
 scrapes it and alerts on Discord if the server is down for more than 2 minutes.
 
 ## Windows
@@ -71,4 +71,4 @@ Runs unchanged on Docker Desktop (WSL 2), see [docs/windows.md](docs/windows.md)
 
 ---
 
-Part of my homelab series → [server-baseline](https://github.com/businessantonybdc-crypto/server-baseline) · [backup-toolkit](https://github.com/businessantonybdc-crypto/backup-toolkit) · [homelab-monitoring](https://github.com/businessantonybdc-crypto/homelab-monitoring)
+Part of my homelab series → [bastion](https://github.com/antony-bdc/bastion) · [safekeep](https://github.com/antony-bdc/safekeep) · [observatory](https://github.com/antony-bdc/observatory)

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# backup-toolkit post-hook: always re-enable autosave, even if the backup failed.
-# Install: ln -s "$PWD/scripts/backup-hook-post.sh" /etc/backup-toolkit/hooks/post.d/50-minecraft
+# safekeep post-hook: always re-enable autosave, even if the backup failed.
+# Install: ln -s "$PWD/scripts/backup-hook-post.sh" /etc/safekeep/hooks/post.d/50-minecraft
 set -euo pipefail
 cd "$(dirname "$(readlink -f "$0")")/.."
 
